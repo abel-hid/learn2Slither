@@ -55,7 +55,7 @@ def wait_for_step(viewer, args):
             return False
     return True
 
-
+ 
 def run_session(env, interp, agent, viewer, args):
     verbose = args.visual == "on"
     env.reset()
@@ -85,8 +85,7 @@ def main(argv=None):
     seed = args.seed
     env = Environment(size=args.size, seed=seed)
     interp = Interpreter()
-    agent = Agent(learning=not args.dontlearn,
-                  seed=None if seed is None else seed + 1)
+    agent = Agent(learning=not args.dontlearn, seed=None if seed is None else seed + 1)
 
     if args.load:
         try:
@@ -110,19 +109,16 @@ def main(argv=None):
                 break
             agent.end_session()
             if args.visual == "on":
-                print(f"Session {i}/{args.sessions}: length = "
-                      f"{env.max_length}, duration = {env.steps}")
+                print(f"Session {i}/{args.sessions}: length = " f"{env.max_length}, duration = {env.steps}")
             elif i % progress_every == 0:
-                print(f"[{i}/{args.sessions}] best length so far = "
-                      f"{max_length}, epsilon = {agent.epsilon:.3f}")
+                print(f"[{i}/{args.sessions}] best length so far = " f"{max_length}, epsilon = {agent.epsilon:.3f}")
     except KeyboardInterrupt:
         print("\nInterrupted.")
     finally:
         if viewer is not None:
             viewer.close()
 
-    print(f"Game over, max length = {max_length}, "
-          f"max duration = {max_duration}")
+    print(f"Game over, max length = {max_length}, " f"max duration = {max_duration}")
     if args.save:
         folder = os.path.dirname(args.save)
         if folder:

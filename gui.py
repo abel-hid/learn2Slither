@@ -30,8 +30,7 @@ class Display:
         self.step_by_step = step_by_step
         self.cell = max(14, min(48, 640 // env.size))
         self.width = env.size * self.cell
-        self.screen = pygame.display.set_mode(
-            (self.width, self.width + STATUS_HEIGHT))
+        self.screen = pygame.display.set_mode((self.width, self.width + STATUS_HEIGHT))
         pygame.display.set_caption("Snake Game")
         self.font = pygame.font.Font(None, 22)
         self.clock = pygame.time.Clock()
