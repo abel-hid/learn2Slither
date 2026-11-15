@@ -5,7 +5,6 @@ from enum import Enum
 
 
 class Action(Enum):
-    """The 4 moves, as (row, col) deltas."""
     UP = (-1, 0)
     LEFT = (0, -1)
     DOWN = (1, 0)
@@ -83,13 +82,15 @@ class Environment:
         if new_len == 0:
             return self.finish(Event.ZERO_LENGTH)
 
-        # New body: head + old body, cut to the new length. If not growing,
-        # the tail cell is freed, so moving into it is legal.
-        body = ([new_head] + self.snake)[:new_len]
-        if new_head in body[1:]:
+        body = [new_head]
+        for cell in self.snake:
+            body.append(cell)
+        while len(body) > new_len:
+            body.pop()
+
+        if body.count(new_head) > 1:
             return self.finish(Event.HIT_SELF)
         self.snake = body
-
         if event is Event.GREEN_APPLE:
             self.green_apples.remove(new_head)
             self.spawn_apple(self.green_apples)
@@ -118,12 +119,13 @@ class Environment:
         taken = set(self.snake)
         taken.update(self.green_apples)
         taken.update(self.red_apples)
-        return [
-            (r, c)
-            for r in range(self.size)
-            for c in range(self.size)
-            if (r, c) not in taken
-        ]
+
+        free = []
+        for r in range(self.size):
+            for c in range(self.size):
+                if (r, c) not in taken:
+                    free.append((r, c))
+        return free
 
     def spawn_apple(self, apple_list):
         free = self.free_cells()
@@ -132,11 +134,13 @@ class Environment:
 
     def spawn_snake(self, length):
         while True:
-            body = [(self.rng.randrange(self.size),
-                     self.rng.randrange(self.size))]
+            body = [(self.rng.randrange(self.size), self.rng.randrange(self.size))]
             while len(body) < length:
-                options = [n for n in self.neighbors(body[-1])
-                           if n not in body]
+                options = []
+                for action in Action:
+                    nxt = (body[-1][0] + action.value[0], body[-1][1] + action.value[1])
+                    if self.in_bounds(nxt) and nxt not in body:
+                        options.append(nxt)
                 if not options:
                     break
                 body.append(self.rng.choice(options))
@@ -145,10 +149,7 @@ class Environment:
 
 
 def main():
-    env = Environment(size=5, n_green=1, n_red=1, seed=42)
-    print(f"Initial snake: {env.snake}")
-    print(f"Green apples: {env.green_apples}")
-    print(f"Red apples: {env.red_apples}")
+    env = Environment(size=10, n_green=1, n_red=1, seed=42)
     while not env.done:
         action = random.choice(list(Action))
         result = env.step(action)

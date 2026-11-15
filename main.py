@@ -22,7 +22,7 @@ def parse_args(argv=None):
     parser.add_argument("-step-by-step", dest="step_by_step",action="store_true")
     parser.add_argument("-speed", type=float, default=0.1)
     parser.add_argument("-size", type=int, default=10)
-    parser.add_argument("-maxsteps", type=int, default=2000, help="step cap per session, avoids endless loops")
+    parser.add_argument("-maxsteps", type=int, default=2000)
     parser.add_argument("-seed", type=int, default=None)
     args = parser.parse_args(argv)
     if args.sessions < 1:
@@ -41,7 +41,7 @@ def make_viewer(args, env):
         viewer = Display(env, args.speed, args.step_by_step)
         return viewer
     except Exception as err: 
-        print(f"GUI unavailable ({err}): terminal output only.", file=sys.stderr)
+        print(f"GUI unavailable: {err}", file=sys.stderr)
         return None
 
 

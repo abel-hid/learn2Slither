@@ -23,13 +23,15 @@ class Agent:
 
 
     def choose(self, state):
-        """Epsilon-greedy while learning, pure greedy otherwise."""
         if self.learning and self.rng.random() < self.epsilon:
             return self.rng.choice(ACTIONS)
         values = self.q.get(state, ZEROS)
         best = max(values)
-        ties = [i for i, v in enumerate(values) if v == best]
-        return ACTIONS[self.rng.choice(ties)]
+        actions = []
+        for i, value in enumerate(values):
+            if value == best:
+                actions.append(i)
+        return ACTIONS[self.rng.choice(actions)]
 
 
     def learn(self, state, action, reward, next_state, done):
@@ -45,7 +47,6 @@ class Agent:
         values[i] += self.alpha * (target - values[i])
 
     def end_session(self):
-        """Call once per finished game."""
         self.sessions += 1
         if self.learning:
             self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
@@ -58,13 +59,13 @@ class Agent:
             q_data[key] = values
 
         data = {
-            "alpha": self.alpha,
-            "gamma": self.gamma,
-            "epsilon": self.epsilon,
-            "epsilon_min": self.epsilon_min,
-            "epsilon_decay": self.epsilon_decay,
-            "sessions": self.sessions,
-            "q": q_data,
+            "alpha": self.alpha, # Learning rate
+            "gamma": self.gamma, # Discount factor :how much future rewards are valued
+            "epsilon": self.epsilon, # Exploration rate
+            "epsilon_min": self.epsilon_min, # Minimum exploration rate
+            "epsilon_decay": self.epsilon_decay, # Exploration decay rate
+            "sessions": self.sessions, # Number of sessions played
+            "q": q_data, # Q-table
         }
         with open(path, "w") as f:
             json.dump(data, f)

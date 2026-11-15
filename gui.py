@@ -40,11 +40,11 @@ class Display:
     def draw(self):
         if self.closed:
             return
-        self._render()
+        self.render()
         if self.env.done:
             self.pause(min(self.speed * 3, 0.5))
 
-    def _render(self):
+    def render(self):
         env = self.env
         self.screen.fill(BACKGROUND, (0, 0, self.width, self.width))
         for cell in env.green_apples:
@@ -57,7 +57,7 @@ class Display:
             p = min(i * self.cell, self.width - 1)
             pygame.draw.line(self.screen, GRID, (p, 0), (p, self.width))
             pygame.draw.line(self.screen, GRID, (0, p), (self.width, p))
-        self._draw_status()
+        self.draw_status()
         pygame.display.flip()
 
     def _fill(self, cell, color):
@@ -66,7 +66,7 @@ class Display:
                 self.cell - 1, self.cell - 1)
         pygame.draw.rect(self.screen, color, rect)
 
-    def _draw_status(self):
+    def draw_status(self):
         env = self.env
         top = self.width
         self.screen.fill(BAR, (0, top, self.width, STATUS_HEIGHT))
@@ -99,7 +99,6 @@ class Display:
             self.clock.tick(60)
 
     def pause(self, seconds):
-        """Short pause that keeps the window responsive."""
         deadline = time.monotonic() + seconds
         while time.monotonic() < deadline and not self.closed:
             for event in pygame.event.get():
@@ -119,13 +118,13 @@ class Display:
             return STEP
         if event.key == pygame.K_s:
             self.step_by_step = not self.step_by_step
-            self._render()
+            self.render()
         elif event.key in (pygame.K_PLUS, pygame.K_EQUALS, pygame.K_KP_PLUS):
             self.speed = 0.0 if self.speed < 0.01 else self.speed * 0.7
-            self._render()
+            self.render()
         elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
             self.speed = min(2.0, max(0.02, self.speed) * 1.4)
-            self._render()
+            self.render()
         return None
 
     def close(self):
