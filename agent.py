@@ -10,7 +10,8 @@ ZEROS = [0.0] * len(ACTIONS)
 
 
 class Agent:
-    def __init__(self, alpha=0.1, gamma=0.9, epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.99, learning=True, seed=None):
+    def __init__(self, alpha=0.1, gamma=0.9, epsilon=1.0, epsilon_min=0.01,
+                 epsilon_decay=0.99, learning=True, seed=None):
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
@@ -20,7 +21,6 @@ class Agent:
         self.sessions = 0
         self.q = {}
         self.rng = random.Random(seed)
-
 
     def choose(self, state):
         if self.learning and self.rng.random() < self.epsilon:
@@ -32,7 +32,6 @@ class Agent:
             if value == best:
                 actions.append(i)
         return ACTIONS[self.rng.choice(actions)]
-
 
     def learn(self, state, action, reward, next_state, done):
         """Q(s,a) += alpha * (r + gamma * max Q(s',.) - Q(s,a))."""
@@ -49,8 +48,8 @@ class Agent:
     def end_session(self):
         self.sessions += 1
         if self.learning:
-            self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-
+            self.epsilon = max(self.epsilon_min,
+                               self.epsilon * self.epsilon_decay)
 
     def save(self, path):
         q_data = {}
@@ -59,13 +58,14 @@ class Agent:
             q_data[key] = values
 
         data = {
-            "alpha": self.alpha, # Learning rate
-            "gamma": self.gamma, # Discount factor :how much future rewards are valued
-            "epsilon": self.epsilon, # Exploration rate
-            "epsilon_min": self.epsilon_min, # Minimum exploration rate
-            "epsilon_decay": self.epsilon_decay, # Exploration decay rate
-            "sessions": self.sessions, # Number of sessions played
-            "q": q_data, # Q-table
+            "alpha": self.alpha,  # Learning rate
+            # Discount factor: how much future rewards are valued
+            "gamma": self.gamma,
+            "epsilon": self.epsilon,  # Exploration rate
+            "epsilon_min": self.epsilon_min,  # Minimum exploration rate
+            "epsilon_decay": self.epsilon_decay,  # Exploration decay rate
+            "sessions": self.sessions,  # Number of sessions played
+            "q": q_data,  # Q-table
         }
         with open(path, "w") as f:
             json.dump(data, f)

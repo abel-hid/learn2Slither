@@ -57,10 +57,10 @@ class Interpreter:
         left = rays[Action.LEFT]
         indent = " " * len(left)
         lines = [indent + c for c in reversed(rays[Action.UP])]
-        lines.append("".join(reversed(left)) + HEAD + "".join(rays[Action.RIGHT]))
+        lines.append("".join(reversed(left)) + HEAD
+                     + "".join(rays[Action.RIGHT]))
         lines += [indent + c for c in rays[Action.DOWN]]
         return "\n".join(lines)
-
 
     def state(self, env):
         rays = self.vision(env)
@@ -69,7 +69,9 @@ class Interpreter:
     @staticmethod
     def encode(ray):
         distance = next(i + 1 for i, c in enumerate(ray) if c in (WALL, BODY))
-        bucket = min(distance, 3) - 1 # bucket 0 = 1 step, bucket 1 = 2 steps, bucket 2 = 3+ steps(wall or body))
+        # danger (wall or body) distance: bucket 0 = 1 step,
+        # bucket 1 = 2 steps, bucket 2 = 3+ steps
+        bucket = min(distance, 3) - 1
         return (bucket, int(GREEN in ray), int(RED in ray))
 
 

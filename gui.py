@@ -4,7 +4,7 @@ import os
 import time
 
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
-import pygame 
+import pygame  # noqa: E402 (env var must be set before the import)
 
 BACKGROUND = (240, 240, 240)
 GRID = (0, 0, 0)
@@ -30,12 +30,12 @@ class Display:
         self.step_by_step = step_by_step
         self.cell = max(14, min(48, 640 // env.size))
         self.width = env.size * self.cell
-        self.screen = pygame.display.set_mode((self.width, self.width + STATUS_HEIGHT))
+        self.screen = pygame.display.set_mode(
+            (self.width, self.width + STATUS_HEIGHT))
         pygame.display.set_caption("Snake Game")
         self.font = pygame.font.Font(None, 22)
         self.clock = pygame.time.Clock()
         self.closed = False
-
 
     def draw(self):
         if self.closed:
@@ -80,7 +80,6 @@ class Display:
         self.screen.blit(self.font.render(line, True, color), (8, top + 6))
         self.screen.blit(self.font.render(help_line, True, TEXT),
                          (8, top + 26))
-
 
     def wait(self):
         """Delay before the next move, or block for a key in step mode."""

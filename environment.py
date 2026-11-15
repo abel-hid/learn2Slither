@@ -18,7 +18,7 @@ class Event(Enum):
     HIT_WALL = "hit_wall"
     HIT_SELF = "hit_self"
     ZERO_LENGTH = "zero_length"
-              
+
 
 GAME_OVER_EVENTS = {Event.HIT_WALL, Event.HIT_SELF, Event.ZERO_LENGTH}
 
@@ -42,7 +42,6 @@ class Environment:
         self.max_length = 0
         self.done = False
         self.reset()
-
 
     def reset(self):
         """Start a new training session (game)."""
@@ -77,7 +76,6 @@ class Environment:
         elif new_head in self.red_apples:
             event, delta = Event.RED_APPLE, -1
 
-
         new_len = len(self.snake) + delta
         if new_len == 0:
             return self.finish(Event.ZERO_LENGTH)
@@ -100,7 +98,6 @@ class Environment:
 
         self.max_length = max(self.max_length, len(self.snake))
         return StepResult(event, False)
-
 
     def finish(self, event):
         self.done = True
@@ -134,11 +131,13 @@ class Environment:
 
     def spawn_snake(self, length):
         while True:
-            body = [(self.rng.randrange(self.size), self.rng.randrange(self.size))]
+            body = [(self.rng.randrange(self.size),
+                     self.rng.randrange(self.size))]
             while len(body) < length:
                 options = []
                 for action in Action:
-                    nxt = (body[-1][0] + action.value[0], body[-1][1] + action.value[1])
+                    nxt = (body[-1][0] + action.value[0],
+                           body[-1][1] + action.value[1])
                     if self.in_bounds(nxt) and nxt not in body:
                         options.append(nxt)
                 if not options:
