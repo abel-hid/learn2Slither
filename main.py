@@ -1,4 +1,4 @@
-"""Learn2Slither entry point. Run it through the `snake` launcher:
+"""
 
     ./snake -sessions 10 -save models/10sess.txt -visual off
     ./snake -visual on -load models/100sess.txt -sessions 10 -dontlearn \
@@ -52,7 +52,6 @@ def parse_args(argv=None):
 
 
 def make_viewer(args, env):
-    """Graphical display, if requested and available (see gui.py)."""
     if args.visual == "off":
         return None
     try:
@@ -65,7 +64,6 @@ def make_viewer(args, env):
 
 
 def wait_for_step(viewer, args):
-    """Pause / delay before a move. Returns False if the user quit."""
     if viewer is not None:
         return viewer.wait()
     if args.step_by_step:
@@ -77,7 +75,6 @@ def wait_for_step(viewer, args):
 
 
 def run_session(env, interp, agent, viewer, args):
-    """Play one game. Returns False if the user asked to quit."""
     verbose = args.visual == "on"
     env.reset()
     state = interp.state(env)

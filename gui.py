@@ -1,22 +1,22 @@
-
-
 import os
 import time
 
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
-import pygame  # noqa: E402 (env var must be set before the import)
+import pygame  # noqa: E402
 
-BACKGROUND = (240, 240, 240)
-GRID = (0, 0, 0)
-SNAKE = (0, 0, 255)
-HEAD = (0, 0, 140)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-BAR = (30, 30, 30)
-TEXT = (230, 230, 230)
-ALERT = (255, 120, 120)
+from art import draw_apple, draw_snake, font, mix  # noqa: E402
 
-STATUS_HEIGHT = 48
+LIGHT = (40, 62, 46)
+DARK = (33, 52, 39)
+FRAME = (16, 22, 20)
+BAR = (17, 21, 27)
+TEXT = (232, 236, 240)
+MUTED = (135, 145, 158)
+ACCENT = (90, 200, 255)
+ALERT = (255, 95, 95)
+
+STATUS_HEIGHT = 64
+MIN_WIDTH = 420
 QUIT = "quit"
 STEP = "step"
 
@@ -28,14 +28,32 @@ class Display:
         self.env = env
         self.speed = max(0.0, speed)
         self.step_by_step = step_by_step
-        self.cell = max(14, min(48, 640 // env.size))
-        self.width = env.size * self.cell
+        self.cell = max(14, min(64, 640 // env.size))
+        self.board = env.size * self.cell
+        self.width = max(self.board, MIN_WIDTH)
+        self.left = (self.width - self.board) // 2
         self.screen = pygame.display.set_mode(
-            (self.width, self.width + STATUS_HEIGHT))
+            (self.width, self.board + STATUS_HEIGHT))
         pygame.display.set_caption("Snake Game")
-        self.font = pygame.font.Font(None, 22)
+        self.background = self.make_background()
+        self.direction = (0, -1)
         self.clock = pygame.time.Clock()
         self.closed = False
+
+    def make_background(self):
+        surf = pygame.Surface((self.width, self.board))
+        surf.fill(FRAME)
+        for row in range(self.env.size):
+            for col in range(self.env.size):
+                color = LIGHT if (row + col) % 2 == 0 else DARK
+                surf.fill(color, (self.left + col * self.cell,
+                                  row * self.cell, self.cell, self.cell))
+        return surf
+
+    def center(self, cell):
+        row, col = cell
+        return (self.left + col * self.cell + self.cell / 2,
+                row * self.cell + self.cell / 2)
 
     def draw(self):
         if self.closed:
@@ -46,43 +64,70 @@ class Display:
 
     def render(self):
         env = self.env
-        self.screen.fill(BACKGROUND, (0, 0, self.width, self.width))
+        self.screen.blit(self.background, (0, 0))
         for cell in env.green_apples:
-            self._fill(cell, GREEN)
+            draw_apple(self.screen, self.center(cell), self.cell, "green")
         for cell in env.red_apples:
-            self._fill(cell, RED)
-        for i, cell in enumerate(env.snake):
-            self._fill(cell, HEAD if i == 0 else SNAKE)
-        for i in range(env.size + 1):
-            p = min(i * self.cell, self.width - 1)
-            pygame.draw.line(self.screen, GRID, (p, 0), (p, self.width))
-            pygame.draw.line(self.screen, GRID, (0, p), (self.width, p))
+            draw_apple(self.screen, self.center(cell), self.cell, "red")
+        if len(env.snake) > 1:
+            (r0, c0), (r1, c1) = env.snake[0], env.snake[1]
+            self.direction = (c0 - c1, r0 - r1)
+        points = [self.center(cell) for cell in env.snake]
+        draw_snake(self.screen, points, self.cell, self.direction,
+                   tongue=env.steps % 4 < 2, dead=env.done)
+        if env.done:
+            self.draw_game_over()
         self.draw_status()
         pygame.display.flip()
 
-    def _fill(self, cell, color):
-        row, col = cell
-        rect = (col * self.cell + 1, row * self.cell + 1,
-                self.cell - 1, self.cell - 1)
-        pygame.draw.rect(self.screen, color, rect)
+    def draw_game_over(self):
+        veil = pygame.Surface((self.board, self.board), pygame.SRCALPHA)
+        veil.fill((0, 0, 0, 90))
+        self.screen.blit(veil, (self.left, 0))
+        label = font(max(22, self.board // 10), True).render(
+            "GAME OVER", True, ALERT)
+        box = label.get_rect(center=(self.width // 2, self.board // 2))
+        pygame.draw.rect(self.screen, BAR, box.inflate(36, 16),
+                         border_radius=14)
+        pygame.draw.rect(self.screen, mix(BAR, ALERT, 0.5),
+                         box.inflate(36, 16), 2, border_radius=14)
+        self.screen.blit(label, box)
 
     def draw_status(self):
         env = self.env
-        top = self.width
+        top = self.board
         self.screen.fill(BAR, (0, top, self.width, STATUS_HEIGHT))
-        mode = "STEP" if self.step_by_step else f"{self.speed:.2f}s/move"
-        line = f"Length {len(env.snake)}  Steps {env.steps}  {mode}"
-        color = TEXT
+        pygame.draw.line(self.screen, mix(BAR, ACCENT, 0.5),
+                         (0, top), (self.width, top))
+        x = self.stat("LENGTH", len(env.snake), 14, top + 8)
+        x = self.stat("STEPS", env.steps, x, top + 8)
         if env.done:
-            line += "  GAME OVER"
-            color = ALERT
-        help_line = "SPACE step  S step-mode  +/- speed  Q quit"
-        self.screen.blit(self.font.render(line, True, color), (8, top + 6))
-        self.screen.blit(self.font.render(help_line, True, TEXT),
-                         (8, top + 26))
+            self.chip("GAME OVER", ALERT, x, top + 9)
+        elif self.step_by_step:
+            self.chip("STEP MODE", ACCENT, x, top + 9)
+        else:
+            self.chip(f"{self.speed:.2f}s / move", ACCENT, x, top + 9)
+        hints = font(14).render(
+            "SPACE step    S step mode    +/- speed    Q quit", True, MUTED)
+        self.screen.blit(hints, (14, top + 40))
+
+    def stat(self, name, value, x, y):
+        label = font(12, True).render(name, True, MUTED)
+        number = font(20, True).render(str(value), True, TEXT)
+        self.screen.blit(label, (x, y + 9))
+        self.screen.blit(number, (x + label.get_width() + 6, y + 1))
+        return x + label.get_width() + number.get_width() + 22
+
+    def chip(self, text, color, x, y):
+        label = font(13, True).render(text, True, color)
+        rect = pygame.Rect(x, y, label.get_width() + 20, 24)
+        pygame.draw.rect(self.screen, mix(BAR, color, 0.18), rect,
+                         border_radius=12)
+        pygame.draw.rect(self.screen, mix(BAR, color, 0.55), rect, 1,
+                         border_radius=12)
+        self.screen.blit(label, label.get_rect(center=rect.center))
 
     def wait(self):
-        """Delay before the next move, or block for a key in step mode."""
         if self.closed:
             return False
         deadline = time.monotonic() + self.speed

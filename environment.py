@@ -44,7 +44,6 @@ class Environment:
         self.reset()
 
     def reset(self):
-        """Start a new training session (game)."""
         self.snake = self.spawn_snake(3)
         self.green_apples = []
         self.red_apples = []
@@ -57,7 +56,6 @@ class Environment:
         self.done = False
 
     def step(self, action):
-        """Move the snake one cell and report what happened."""
         if self.done:
             raise RuntimeError("Game is over, call reset() first.")
         self.steps += 1
